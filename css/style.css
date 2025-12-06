@@ -1,0 +1,476 @@
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --momo-primary: #a50064;
+    --momo-secondary: #d82d8b;
+    --momo-gradient: linear-gradient(135deg, #a50064 0%, #d82d8b 100%);
+    --momo-light: #fce4ec;
+    --success-color: #4caf50;
+    --danger-color: #f44336;
+    --text-primary: #333;
+    --text-secondary: #666;
+    --bg-color: #f5f5f5;
+    --white: #ffffff;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* App Container */
+.app-container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.header {
+    background: var(--momo-gradient);
+    padding: 20px;
+    color: var(--white);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--white);
+    padding: 4px;
+}
+
+.header h1 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 20px;
+}
+
+/* Payment Form */
+.payment-form {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: var(--bg-color);
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--momo-primary);
+    background: var(--white);
+    box-shadow: 0 0 0 4px rgba(165, 0, 100, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #aaa;
+}
+
+/* Buttons */
+.btn {
+    width: 100%;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--momo-gradient);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: var(--bg-color);
+    color: var(--text-primary);
+    margin-top: 16px;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: var(--white);
+    flex: 1;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: var(--white);
+    flex: 1;
+}
+
+.btn-group {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-icon {
+    font-size: 20px;
+}
+
+/* QR Section */
+.qr-section {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.qr-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+}
+
+.qr-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    color: var(--momo-primary);
+    font-weight: 600;
+}
+
+.qr-logo {
+    width: 32px;
+    height: 32px;
+}
+
+.qr-code-wrapper {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 16px;
+    display: inline-block;
+    border: 3px solid var(--momo-light);
+    margin-bottom: 20px;
+}
+
+#qrCode {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#qrCode img {
+    border-radius: 8px;
+}
+
+/* Payment Info */
+.payment-info {
+    background: var(--bg-color);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row .label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.info-row .value {
+    font-weight: 500;
+    font-size: 14px;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+.amount-row .value {
+    color: var(--momo-primary);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Status Section */
+.status-section {
+    margin-bottom: 20px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--momo-light);
+}
+
+.status-icon {
+    font-size: 24px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-indicator.success {
+    background: #e8f5e9;
+}
+
+.status-indicator.success .status-icon {
+    color: var(--success-color);
+    animation: none;
+}
+
+.status-indicator.failed {
+    background: #ffebee;
+}
+
+.status-indicator.failed .status-icon {
+    color: var(--danger-color);
+    animation: none;
+}
+
+.status-text {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Test Buttons */
+.test-buttons {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: #fff9c4;
+    border-radius: 12px;
+}
+
+.test-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 40px 30px;
+    text-align: center;
+    max-width: 340px;
+    width: 100%;
+    animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin: 0 auto 20px;
+}
+
+.modal-content.success .modal-icon {
+    background: #e8f5e9;
+    color: var(--success-color);
+}
+
+.modal-content.failed .modal-icon {
+    background: #ffebee;
+    color: var(--danger-color);
+}
+
+.modal-content h2 {
+    font-size: 22px;
+    margin-bottom: 16px;
+}
+
+.modal-content.success h2 {
+    color: var(--success-color);
+}
+
+.modal-content.failed h2 {
+    color: var(--danger-color);
+}
+
+.modal-amount {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--momo-primary);
+    margin-bottom: 8px;
+}
+
+.modal-desc {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.modal-message {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 16px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    border-top: 1px solid #eee;
+}
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive */
+@media (max-width: 380px) {
+    .main-content {
+        padding: 16px;
+    }
+
+    .qr-card {
+        padding: 16px;
+    }
+
+    .modal-content {
+        padding: 30px 20px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1a1a1a;
+        --text-primary: #ffffff;
+        --text-secondary: #aaaaaa;
+        --white: #2d2d2d;
+    }
+
+    .form-group input {
+        color: var(--text-primary);
+    }
+
+    .qr-code-wrapper {
+        background: #ffffff;
+    }
+
+    .modal-content {
+        background: #2d2d2d;
+    }
+}

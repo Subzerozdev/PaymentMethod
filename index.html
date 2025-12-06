@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Momo QR Payment</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- QRCode.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="Momo" class="logo">
+                <h1>Thanh toán QR</h1>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Payment Form -->
+            <section class="payment-form" id="paymentForm">
+                <div class="form-group">
+                    <label for="phoneNumber">Số điện thoại nhận tiền</label>
+                    <input type="tel" id="phoneNumber" placeholder="VD: 0912345678" maxlength="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="receiverName">Tên người nhận</label>
+                    <input type="text" id="receiverName" placeholder="VD: NGUYEN VAN A">
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">Số tiền (VNĐ)</label>
+                    <input type="text" id="amount" placeholder="VD: 50000" inputmode="numeric">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Nội dung chuyển tiền</label>
+                    <input type="text" id="description" placeholder="VD: Thanh toan don hang">
+                </div>
+
+                <button class="btn btn-primary" id="generateQR">
+                    <span class="btn-icon">📱</span>
+                    Tạo mã QR
+                </button>
+            </section>
+
+            <!-- QR Code Display -->
+            <section class="qr-section hidden" id="qrSection">
+                <div class="qr-card">
+                    <div class="qr-header">
+                        <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="Momo" class="qr-logo">
+                        <span>Quét mã để thanh toán</span>
+                    </div>
+
+                    <div class="qr-code-wrapper">
+                        <div id="qrCode"></div>
+                    </div>
+
+                    <div class="payment-info">
+                        <div class="info-row">
+                            <span class="label">Người nhận:</span>
+                            <span class="value" id="displayName">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Số điện thoại:</span>
+                            <span class="value" id="displayPhone">-</span>
+                        </div>
+                        <div class="info-row amount-row">
+                            <span class="label">Số tiền:</span>
+                            <span class="value amount" id="displayAmount">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Nội dung:</span>
+                            <span class="value" id="displayDescription">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Simulated Payment Status -->
+                    <div class="status-section" id="statusSection">
+                        <div class="status-indicator" id="statusIndicator">
+                            <div class="status-icon pending">⏳</div>
+                            <span class="status-text">Đang chờ thanh toán...</span>
+                        </div>
+                    </div>
+
+                    <!-- Test Buttons -->
+                    <div class="test-buttons">
+                        <p class="test-label">Mô phỏng kết quả:</p>
+                        <div class="btn-group">
+                            <button class="btn btn-success" id="btnSuccess">
+                                ✓ Thành công
+                            </button>
+                            <button class="btn btn-danger" id="btnFailed">
+                                ✗ Thất bại
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary" id="newPayment">
+                        Tạo thanh toán mới
+                    </button>
+                </div>
+            </section>
+
+            <!-- Success Modal -->
+            <div class="modal hidden" id="successModal">
+                <div class="modal-content success">
+                    <div class="modal-icon">✓</div>
+                    <h2>Thanh toán thành công!</h2>
+                    <p class="modal-amount" id="successAmount">0 đ</p>
+                    <p class="modal-desc" id="successDesc">-</p>
+                    <button class="btn btn-primary" id="closeSuccess">Đóng</button>
+                </div>
+            </div>
+
+            <!-- Failed Modal -->
+            <div class="modal hidden" id="failedModal">
+                <div class="modal-content failed">
+                    <div class="modal-icon">✗</div>
+                    <h2>Thanh toán thất bại!</h2>
+                    <p class="modal-message">Giao dịch không thể hoàn tất. Vui lòng thử lại.</p>
+                    <button class="btn btn-primary" id="closeFailed">Thử lại</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Demo thanh toán QR Momo</p>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
