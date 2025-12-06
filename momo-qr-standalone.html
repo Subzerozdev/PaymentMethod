@@ -71,7 +71,7 @@
             color: var(--text-secondary);
             margin-bottom: 8px;
         }
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 14px 16px;
             border: 2px solid #e0e0e0;
@@ -80,13 +80,19 @@
             transition: all 0.3s ease;
             background: var(--bg-color);
         }
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: var(--momo-primary);
             background: var(--white);
             box-shadow: 0 0 0 4px rgba(165, 0, 100, 0.1);
         }
         .form-group input::placeholder { color: #aaa; }
+        .form-group small {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
         .btn {
             width: 100%;
             padding: 16px 24px;
@@ -148,7 +154,16 @@
             margin-bottom: 20px;
         }
         #qrCode { display: flex; justify-content: center; align-items: center; }
-        #qrCode img { border-radius: 8px; }
+        #qrCode img, #qrCode canvas { border-radius: 8px; }
+        .qr-format-info {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #1565c0;
+            word-break: break-all;
+        }
         .payment-info {
             background: var(--bg-color);
             border-radius: 12px;
@@ -277,6 +292,16 @@
         <main class="main-content">
             <section class="payment-form" id="paymentForm">
                 <div class="form-group">
+                    <label for="qrFormat">Chọn định dạng QR</label>
+                    <select id="qrFormat">
+                        <option value="momo_deeplink">Momo Deeplink (me.momo.vn)</option>
+                        <option value="momo_app">Momo App Link</option>
+                        <option value="momo_personal">Momo Personal QR</option>
+                        <option value="momo_json">Momo JSON Format</option>
+                    </select>
+                    <small>Thử các format khác nhau nếu bị lỗi</small>
+                </div>
+                <div class="form-group">
                     <label for="phoneNumber">Số điện thoại nhận tiền</label>
                     <input type="tel" id="phoneNumber" placeholder="VD: 0912345678" maxlength="10">
                 </div>
@@ -305,6 +330,9 @@
                     </div>
                     <div class="qr-code-wrapper">
                         <div id="qrCode"></div>
+                    </div>
+                    <div class="qr-format-info" id="qrFormatInfo">
+                        Format: ...
                     </div>
                     <div class="payment-info">
                         <div class="info-row">
@@ -381,6 +409,7 @@
             }
 
             bindElements() {
+                this.qrFormatSelect = document.getElementById('qrFormat');
                 this.phoneInput = document.getElementById('phoneNumber');
                 this.nameInput = document.getElementById('receiverName');
                 this.amountInput = document.getElementById('amount');
@@ -389,6 +418,7 @@
                 this.paymentForm = document.getElementById('paymentForm');
                 this.qrSection = document.getElementById('qrSection');
                 this.qrCodeContainer = document.getElementById('qrCode');
+                this.qrFormatInfo = document.getElementById('qrFormatInfo');
                 this.displayName = document.getElementById('displayName');
                 this.displayPhone = document.getElementById('displayPhone');
                 this.displayAmount = document.getElementById('displayAmount');
@@ -454,27 +484,63 @@
                 return true;
             }
 
+            generateQRContent(format, phone, name, amount, description) {
+                const cleanDesc = description.replace(/[|&?]/g, ' ').substring(0, 50);
+
+                switch (format) {
+                    case 'momo_deeplink':
+                        // Format: https://me.momo.vn/PHONE/AMOUNT
+                        // hoặc https://nhantien.momo.vn/PHONE/AMOUNT
+                        return `https://me.momo.vn/${phone}/${amount}`;
+
+                    case 'momo_app':
+                        // Momo app deeplink format
+                        return `momo://app?action=payWithAppToken&amount=${amount}&receiver=${phone}&comment=${encodeURIComponent(cleanDesc)}`;
+
+                    case 'momo_personal':
+                        // Format cũ: 2|99|PHONE|NAME|0|0|AMOUNT|DESCRIPTION|transfer_myqr
+                        return `2|99|${phone}|${name}|0|0|${amount}|${cleanDesc}|transfer_myqr`;
+
+                    case 'momo_json':
+                        // JSON format
+                        return JSON.stringify({
+                            phone: phone,
+                            name: name,
+                            amount: amount,
+                            message: cleanDesc,
+                            type: "transfer"
+                        });
+
+                    default:
+                        return `https://me.momo.vn/${phone}/${amount}`;
+                }
+            }
+
             generateQRCode() {
                 if (!this.validateForm()) return;
+
+                const format = this.qrFormatSelect.value;
                 const phone = this.phoneInput.value.trim();
                 const name = this.nameInput.value.trim().toUpperCase();
                 const amount = parseInt(this.amountInput.value.trim());
                 const description = this.descriptionInput.value.trim() || 'Thanh toan';
-                this.currentPayment = { phone, name, amount, description };
 
-                // Momo QR format: 2|99|PHONE|NAME|0|0|AMOUNT|DESCRIPTION|transfer_myqr
-                const cleanDesc = description.replace(/[|]/g, ' ');
-                const qrContent = `2|99|${phone}|${name}|0|0|${amount}|${cleanDesc}|transfer_myqr`;
+                this.currentPayment = { phone, name, amount, description, format };
+
+                const qrContent = this.generateQRContent(format, phone, name, amount, description);
 
                 this.qrCodeContainer.innerHTML = '';
                 this.qrCodeInstance = new QRCode(this.qrCodeContainer, {
                     text: qrContent,
                     width: 200,
                     height: 200,
-                    colorDark: '#a50064',
+                    colorDark: '#000000',
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.M
                 });
+
+                // Hiển thị format info để debug
+                this.qrFormatInfo.textContent = `Format: ${format}\nContent: ${qrContent}`;
 
                 this.displayName.textContent = name;
                 this.displayPhone.textContent = phone.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
@@ -483,6 +549,8 @@
                 this.resetStatus();
                 this.paymentForm.classList.add('hidden');
                 this.qrSection.classList.remove('hidden');
+
+                console.log('QR Format:', format);
                 console.log('QR Content:', qrContent);
             }
 
