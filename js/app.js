@@ -1,12 +1,11 @@
 /**
- * Momo QR Payment Simulator
- * Tạo mã QR thanh toán Momo và mô phỏng kết quả thanh toán
+ * Momo QR Payment - Tích hợp API Momo Sandbox
  */
 
 class MomoPayment {
     constructor() {
-        this.qrCodeInstance = null;
         this.currentPayment = null;
+        this.pollingInterval = null;
         this.init();
     }
 
@@ -14,6 +13,7 @@ class MomoPayment {
         this.bindElements();
         this.bindEvents();
         this.formatAmountInput();
+        this.checkUrlParams();
     }
 
     bindElements() {
@@ -23,15 +23,16 @@ class MomoPayment {
         this.amountInput = document.getElementById('amount');
         this.descriptionInput = document.getElementById('description');
         this.generateBtn = document.getElementById('generateQR');
+        this.loadingCreate = document.getElementById('loadingCreate');
 
         // Sections
         this.paymentForm = document.getElementById('paymentForm');
         this.qrSection = document.getElementById('qrSection');
-        this.qrCodeContainer = document.getElementById('qrCode');
+        this.qrCodeImage = document.getElementById('qrCodeImage');
 
         // Display elements
+        this.displayOrderId = document.getElementById('displayOrderId');
         this.displayName = document.getElementById('displayName');
-        this.displayPhone = document.getElementById('displayPhone');
         this.displayAmount = document.getElementById('displayAmount');
         this.displayDescription = document.getElementById('displayDescription');
 
@@ -39,8 +40,6 @@ class MomoPayment {
         this.statusIndicator = document.getElementById('statusIndicator');
 
         // Buttons
-        this.btnSuccess = document.getElementById('btnSuccess');
-        this.btnFailed = document.getElementById('btnFailed');
         this.newPaymentBtn = document.getElementById('newPayment');
 
         // Modals
@@ -48,17 +47,15 @@ class MomoPayment {
         this.failedModal = document.getElementById('failedModal');
         this.successAmount = document.getElementById('successAmount');
         this.successDesc = document.getElementById('successDesc');
+        this.successTransId = document.getElementById('successTransId');
+        this.failedMessage = document.getElementById('failedMessage');
         this.closeSuccessBtn = document.getElementById('closeSuccess');
         this.closeFailedBtn = document.getElementById('closeFailed');
     }
 
     bindEvents() {
         // Generate QR
-        this.generateBtn.addEventListener('click', () => this.generateQRCode());
-
-        // Test buttons
-        this.btnSuccess.addEventListener('click', () => this.simulateSuccess());
-        this.btnFailed.addEventListener('click', () => this.simulateFailed());
+        this.generateBtn.addEventListener('click', () => this.createPayment());
 
         // New payment
         this.newPaymentBtn.addEventListener('click', () => this.resetForm());
@@ -78,17 +75,39 @@ class MomoPayment {
         // Enter key to generate
         [this.phoneInput, this.nameInput, this.amountInput, this.descriptionInput].forEach(input => {
             input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') this.generateQRCode();
+                if (e.key === 'Enter') this.createPayment();
             });
         });
     }
 
     formatAmountInput() {
         this.amountInput.addEventListener('input', (e) => {
-            // Remove non-numeric characters
             let value = e.target.value.replace(/\D/g, '');
             e.target.value = value;
         });
+    }
+
+    // Kiểm tra URL params khi redirect về từ Momo
+    checkUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+        const status = urlParams.get('status');
+        const message = urlParams.get('message');
+
+        if (orderId && status) {
+            // Clear URL params
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            if (status === 'success') {
+                this.showSuccess({
+                    amount: 0,
+                    orderInfo: 'Thanh toán thành công',
+                    transId: orderId
+                });
+            } else {
+                this.showFailed(message || 'Thanh toán thất bại');
+            }
+        }
     }
 
     validateForm() {
@@ -118,11 +137,20 @@ class MomoPayment {
     }
 
     showAlert(message) {
-        // Simple alert, can be replaced with custom toast
         alert(message);
     }
 
-    generateQRCode() {
+    showLoading(show) {
+        if (show) {
+            this.generateBtn.classList.add('hidden');
+            this.loadingCreate.classList.remove('hidden');
+        } else {
+            this.generateBtn.classList.remove('hidden');
+            this.loadingCreate.classList.add('hidden');
+        }
+    }
+
+    async createPayment() {
         if (!this.validateForm()) return;
 
         const phone = this.phoneInput.value.trim();
@@ -130,68 +158,174 @@ class MomoPayment {
         const amount = parseInt(this.amountInput.value.trim());
         const description = this.descriptionInput.value.trim() || 'Thanh toan';
 
-        // Store current payment info
-        this.currentPayment = { phone, name, amount, description };
+        this.showLoading(true);
 
-        // Generate Momo QR content
-        // Format: 2|99|PHONE|NAME|0|0|AMOUNT|DESCRIPTION|transfer_myqr
-        const qrContent = this.generateMomoQRContent(phone, name, amount, description);
+        try {
+            const response = await fetch('/api/create-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: amount,
+                    orderInfo: `${description} - ${name}`,
+                    phone: phone,
+                    name: name
+                })
+            });
 
-        // Clear previous QR code
-        this.qrCodeContainer.innerHTML = '';
+            const data = await response.json();
+            console.log('Payment created:', data);
 
-        // Generate new QR code
-        this.qrCodeInstance = new QRCode(this.qrCodeContainer, {
-            text: qrContent,
-            width: 200,
-            height: 200,
-            colorDark: '#a50064',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.M
-        });
+            if (data.success && data.qrCodeUrl) {
+                this.currentPayment = {
+                    orderId: data.orderId,
+                    phone,
+                    name,
+                    amount,
+                    description,
+                    qrCodeUrl: data.qrCodeUrl,
+                    payUrl: data.payUrl
+                };
 
-        // Update display
-        this.displayName.textContent = name;
-        this.displayPhone.textContent = this.formatPhone(phone);
-        this.displayAmount.textContent = this.formatCurrency(amount);
-        this.displayDescription.textContent = description;
+                this.showQRCode();
+                this.startPolling();
+            } else {
+                throw new Error(data.message || 'Không thể tạo mã thanh toán');
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            this.showAlert('Lỗi: ' + error.message);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    showQRCode() {
+        // Hiển thị QR code từ Momo
+        this.qrCodeImage.src = this.currentPayment.qrCodeUrl;
+
+        // Cập nhật thông tin
+        this.displayOrderId.textContent = this.currentPayment.orderId;
+        this.displayName.textContent = this.currentPayment.name;
+        this.displayAmount.textContent = this.formatCurrency(this.currentPayment.amount);
+        this.displayDescription.textContent = this.currentPayment.description;
 
         // Reset status
-        this.resetStatus();
+        this.updateStatus('pending');
 
-        // Show QR section
+        // Hiển thị QR section
         this.paymentForm.classList.add('hidden');
         this.qrSection.classList.remove('hidden');
-
-        // Log QR content for debugging
-        console.log('QR Content:', qrContent);
     }
 
-    generateMomoQRContent(phone, name, amount, description) {
-        /**
-         * Momo QR Format Options:
-         *
-         * 1. Momo Personal QR (nhận tiền cá nhân):
-         *    2|99|PHONE|NAME|0|0|AMOUNT|DESCRIPTION|transfer_myqr
-         *
-         * 2. Momo Deeplink:
-         *    https://me.momo.vn/PHONE/AMOUNT
-         *
-         * 3. Momo App Deeplink:
-         *    momo://app?action=payWithApp&isScanQR=true&sid=...
-         */
+    updateStatus(status, message = '') {
+        this.statusIndicator.className = 'status-indicator';
 
-        // Using Momo Personal QR format
-        // Remove special characters from description
-        const cleanDesc = description.replace(/[|]/g, ' ');
-
-        // Format: 2|99|PHONE|NAME|0|0|AMOUNT|DESCRIPTION|transfer_myqr
-        return `2|99|${phone}|${name}|0|0|${amount}|${cleanDesc}|transfer_myqr`;
+        switch (status) {
+            case 'pending':
+                this.statusIndicator.innerHTML = `
+                    <div class="status-icon pending">
+                        <div class="spinner-small"></div>
+                    </div>
+                    <span class="status-text">Đang chờ thanh toán...</span>
+                `;
+                break;
+            case 'success':
+                this.statusIndicator.classList.add('success');
+                this.statusIndicator.innerHTML = `
+                    <div class="status-icon">✓</div>
+                    <span class="status-text">Thanh toán thành công!</span>
+                `;
+                break;
+            case 'failed':
+                this.statusIndicator.classList.add('failed');
+                this.statusIndicator.innerHTML = `
+                    <div class="status-icon">✗</div>
+                    <span class="status-text">${message || 'Thanh toán thất bại'}</span>
+                `;
+                break;
+        }
     }
 
-    formatPhone(phone) {
-        // Format: 0912 345 678
-        return phone.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+    startPolling() {
+        // Polling mỗi 3 giây để kiểm tra trạng thái
+        this.pollingInterval = setInterval(async () => {
+            await this.checkPaymentStatus();
+        }, 3000);
+
+        // Timeout sau 10 phút
+        setTimeout(() => {
+            this.stopPolling();
+        }, 600000);
+    }
+
+    stopPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+        }
+    }
+
+    async checkPaymentStatus() {
+        if (!this.currentPayment) return;
+
+        try {
+            // Kiểm tra local status trước
+            const localResponse = await fetch(`/api/payment-status/${this.currentPayment.orderId}`);
+            const localData = await localResponse.json();
+
+            if (localData.status === 'success') {
+                this.stopPolling();
+                this.updateStatus('success');
+                this.showSuccess(localData);
+                return;
+            }
+
+            if (localData.status === 'failed') {
+                this.stopPolling();
+                this.updateStatus('failed', localData.message);
+                this.showFailed(localData.message);
+                return;
+            }
+
+            // Query trực tiếp từ Momo API
+            const queryResponse = await fetch('/api/query-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: this.currentPayment.orderId })
+            });
+
+            const queryData = await queryResponse.json();
+            console.log('Query status:', queryData);
+
+            if (queryData.resultCode === 0) {
+                this.stopPolling();
+                this.updateStatus('success');
+                this.showSuccess(queryData);
+            } else if (queryData.resultCode && queryData.resultCode !== 1000) {
+                // 1000 = pending, others = error
+                this.stopPolling();
+                this.updateStatus('failed', queryData.message);
+                this.showFailed(queryData.message);
+            }
+
+        } catch (error) {
+            console.error('Error checking status:', error);
+        }
+    }
+
+    showSuccess(data) {
+        this.successAmount.textContent = this.formatCurrency(data.amount || this.currentPayment?.amount || 0);
+        this.successDesc.textContent = data.orderInfo || this.currentPayment?.description || '';
+        this.successTransId.textContent = `Mã GD: ${data.transId || '-'}`;
+        this.successModal.classList.remove('hidden');
+    }
+
+    showFailed(message) {
+        this.failedMessage.textContent = message || 'Giao dịch không thể hoàn tất.';
+        this.failedModal.classList.remove('hidden');
     }
 
     formatCurrency(amount) {
@@ -201,104 +335,26 @@ class MomoPayment {
         }).format(amount);
     }
 
-    resetStatus() {
-        this.statusIndicator.className = 'status-indicator';
-        this.statusIndicator.innerHTML = `
-            <div class="status-icon pending">⏳</div>
-            <span class="status-text">Đang chờ thanh toán...</span>
-        `;
-    }
-
-    simulateSuccess() {
-        // Update status
-        this.statusIndicator.className = 'status-indicator success';
-        this.statusIndicator.innerHTML = `
-            <div class="status-icon">✓</div>
-            <span class="status-text">Thanh toán thành công!</span>
-        `;
-
-        // Show success modal
-        this.successAmount.textContent = this.formatCurrency(this.currentPayment.amount);
-        this.successDesc.textContent = this.currentPayment.description;
-        this.successModal.classList.remove('hidden');
-
-        // Play success sound (optional)
-        this.playSound('success');
-    }
-
-    simulateFailed() {
-        // Update status
-        this.statusIndicator.className = 'status-indicator failed';
-        this.statusIndicator.innerHTML = `
-            <div class="status-icon">✗</div>
-            <span class="status-text">Thanh toán thất bại!</span>
-        `;
-
-        // Show failed modal
-        this.failedModal.classList.remove('hidden');
-
-        // Play error sound (optional)
-        this.playSound('error');
-    }
-
-    playSound(type) {
-        // Create audio context for notification sounds
-        try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            if (type === 'success') {
-                oscillator.frequency.value = 800;
-                oscillator.type = 'sine';
-                gainNode.gain.value = 0.1;
-                oscillator.start();
-                setTimeout(() => {
-                    oscillator.frequency.value = 1000;
-                }, 100);
-                setTimeout(() => {
-                    oscillator.stop();
-                }, 200);
-            } else {
-                oscillator.frequency.value = 300;
-                oscillator.type = 'sine';
-                gainNode.gain.value = 0.1;
-                oscillator.start();
-                setTimeout(() => {
-                    oscillator.stop();
-                }, 300);
-            }
-        } catch (e) {
-            // Audio not supported
-            console.log('Audio not supported');
-        }
-    }
-
     closeModal(type) {
         if (type === 'success') {
             this.successModal.classList.add('hidden');
+            this.resetForm();
         } else {
             this.failedModal.classList.add('hidden');
         }
     }
 
     resetForm() {
+        this.stopPolling();
+
         // Clear form
         this.phoneInput.value = '';
         this.nameInput.value = '';
         this.amountInput.value = '';
         this.descriptionInput.value = '';
 
-        // Clear QR code
-        this.qrCodeContainer.innerHTML = '';
-        this.qrCodeInstance = null;
+        // Clear payment
         this.currentPayment = null;
-
-        // Reset status
-        this.resetStatus();
 
         // Show form
         this.qrSection.classList.add('hidden');
@@ -313,12 +369,3 @@ class MomoPayment {
 document.addEventListener('DOMContentLoaded', () => {
     window.momoPayment = new MomoPayment();
 });
-
-// Service Worker registration for PWA (optional)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        // navigator.serviceWorker.register('/sw.js')
-        //     .then(reg => console.log('SW registered'))
-        //     .catch(err => console.log('SW registration failed'));
-    });
-}

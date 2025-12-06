@@ -433,6 +433,63 @@ body {
     border-top: 1px solid #eee;
 }
 
+/* Loading */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    color: var(--text-secondary);
+    margin-top: 16px;
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--momo-light);
+    border-top-color: var(--momo-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.spinner-small {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--momo-light);
+    border-top-color: var(--momo-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* QR Code Image */
+#qrCodeImage {
+    max-width: 200px;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Hint text */
+.hint-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #e3f2fd;
+    border-radius: 8px;
+}
+
+/* Modal trans */
+.modal-trans {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
 /* Utility */
 .hidden {
     display: none !important;

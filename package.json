@@ -1,0 +1,9 @@
+{
+  "name": "momo-qr-payment",
+  "version": "1.0.0",
+  "description": "Momo QR Payment Demo with Sandbox API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

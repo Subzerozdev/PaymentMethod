@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Momo QR Payment</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- QRCode.js library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -46,6 +44,11 @@
                     <span class="btn-icon">📱</span>
                     Tạo mã QR
                 </button>
+
+                <div class="loading hidden" id="loadingCreate">
+                    <div class="spinner"></div>
+                    <span>Đang tạo mã thanh toán...</span>
+                </div>
             </section>
 
             <!-- QR Code Display -->
@@ -57,17 +60,17 @@
                     </div>
 
                     <div class="qr-code-wrapper">
-                        <div id="qrCode"></div>
+                        <img id="qrCodeImage" src="" alt="QR Code">
                     </div>
 
                     <div class="payment-info">
                         <div class="info-row">
-                            <span class="label">Người nhận:</span>
-                            <span class="value" id="displayName">-</span>
+                            <span class="label">Mã đơn hàng:</span>
+                            <span class="value" id="displayOrderId">-</span>
                         </div>
                         <div class="info-row">
-                            <span class="label">Số điện thoại:</span>
-                            <span class="value" id="displayPhone">-</span>
+                            <span class="label">Người nhận:</span>
+                            <span class="value" id="displayName">-</span>
                         </div>
                         <div class="info-row amount-row">
                             <span class="label">Số tiền:</span>
@@ -79,26 +82,17 @@
                         </div>
                     </div>
 
-                    <!-- Simulated Payment Status -->
+                    <!-- Payment Status -->
                     <div class="status-section" id="statusSection">
                         <div class="status-indicator" id="statusIndicator">
-                            <div class="status-icon pending">⏳</div>
+                            <div class="status-icon pending">
+                                <div class="spinner-small"></div>
+                            </div>
                             <span class="status-text">Đang chờ thanh toán...</span>
                         </div>
                     </div>
 
-                    <!-- Test Buttons -->
-                    <div class="test-buttons">
-                        <p class="test-label">Mô phỏng kết quả:</p>
-                        <div class="btn-group">
-                            <button class="btn btn-success" id="btnSuccess">
-                                ✓ Thành công
-                            </button>
-                            <button class="btn btn-danger" id="btnFailed">
-                                ✗ Thất bại
-                            </button>
-                        </div>
-                    </div>
+                    <p class="hint-text">Mở app Momo và quét mã QR để thanh toán</p>
 
                     <button class="btn btn-secondary" id="newPayment">
                         Tạo thanh toán mới
@@ -113,6 +107,7 @@
                     <h2>Thanh toán thành công!</h2>
                     <p class="modal-amount" id="successAmount">0 đ</p>
                     <p class="modal-desc" id="successDesc">-</p>
+                    <p class="modal-trans" id="successTransId">Mã GD: -</p>
                     <button class="btn btn-primary" id="closeSuccess">Đóng</button>
                 </div>
             </div>
@@ -122,7 +117,7 @@
                 <div class="modal-content failed">
                     <div class="modal-icon">✗</div>
                     <h2>Thanh toán thất bại!</h2>
-                    <p class="modal-message">Giao dịch không thể hoàn tất. Vui lòng thử lại.</p>
+                    <p class="modal-message" id="failedMessage">Giao dịch không thể hoàn tất.</p>
                     <button class="btn btn-primary" id="closeFailed">Thử lại</button>
                 </div>
             </div>
@@ -130,7 +125,7 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>Demo thanh toán QR Momo</p>
+            <p>Demo thanh toán QR Momo Sandbox</p>
         </footer>
     </div>
 
